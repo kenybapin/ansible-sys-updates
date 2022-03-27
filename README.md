@@ -11,8 +11,8 @@
 ## Workflow
 ```mermaid
 graph TD;
-    CLEAN_FILES-->id1((WINDOWS));
-    CLEAN_FILES-->id2((LINUX));
+    CLEAN_REPORT_FILES-->id1((WINDOWS));
+    CLEAN_REPORT_FILES-->id2((LINUX));
     id2((LINUX))-->CHECK-->UPDATE-->REBOOT;
     id1((WINDOWS))-->WIN_CHECK-->PRE_REBOOT-->WIN_UPDATE-->POST_REBOOT;
     POST_REBOOT-->REPORTING;
