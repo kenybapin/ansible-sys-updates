@@ -1,0 +1,7 @@
+---
+- name: Yum update
+  shell: yum --security update-minimal -y
+  args:
+    warn: false
+  register: yum_update
+  ignore_errors: true

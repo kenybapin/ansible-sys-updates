@@ -1,0 +1,11 @@
+---
+- include: check.yml
+  tags: check
+
+- include: updates.yml
+
+- include: reboot.yml
+  when: yum_update is not failed
+
+- include: log_report.yml
+  delegate_to: localhost

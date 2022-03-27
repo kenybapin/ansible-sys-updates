@@ -1,0 +1,23 @@
+---
+- name: show report
+  shell: cat "{{ playbook_dir }}/report.csv"
+  register: report_list
+  delegate_to: localhost
+
+- name: GENERATE HTML FILE
+  template:
+    src: "{{ playbook_dir }}/roles/report/tasks/visual_report.html.j2"
+    dest: "{{ playbook_dir }}/report_{{ ansible_date_time.date }}_{{ ansible_date_time.epoch }}.html"
+  delegate_to: localhost
+
+#- name: SEND MAIL
+#  mail:
+#    host: smtp.company.org
+#    port: 25
+#    to: someone@company.org
+#    sender: admin@company.org
+#    subject: "Report"
+#    subtype: html
+#    attach: 
+#      - "{{ playbook_dir }}/report.html"
+#  delegate_to: localhost

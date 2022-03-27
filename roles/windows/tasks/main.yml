@@ -1,0 +1,12 @@
+---
+- include: check.yml
+
+- include: reboot.yml
+
+- include: updates.yml
+
+- include: reboot.yml
+  when: win_update is not failed
+
+- include: log_report.yml
+  delegate_to: localhost

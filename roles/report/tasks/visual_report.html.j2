@@ -1,0 +1,105 @@
+{% set count_windows = report_list.stdout_lines|select("match", ".*WINDOWS.*")|list|count -%}
+{% set count_windows_fail = report_list.stdout_lines|select("match", ".*WINDOWS.*(FAIL|CRITICAL).*")|list|count -%}
+{% set count_windows_ok = report_list.stdout_lines|select("match", ".*WINDOWS.*OK.*")|list|count -%}
+{% set count_windows_unreachable = report_list.stdout_lines|select("match", ".*WINDOWS.*UNREACHABLE.*")|list|count -%}
+
+{% set count_linux = report_list.stdout_lines|select("match", ".*LINUX.*")|list|count -%}
+{% set count_linux_fail = report_list.stdout_lines|select("match", ".*WINDOWS.*(FAIL|CRITICAL).*")|list|count -%}
+{% set count_linux_ok = report_list.stdout_lines|select("match", ".*LINUX.*OK.*")|list|count -%}
+{% set count_linux_unreachable = report_list.stdout_lines|select("match", ".*LINUX.*UNREACHABLE.*")|list|count -%}
+
+<html>
+  <head>
+  
+  <style>
+        /* CSS */
+        body {  
+        -webkit-font-smoothing: antialiased;  font-family: Roboto;  
+        font-size: 14px;  color: #757575;  padding-left: 20px;
+        }
+        /* Table */
+        th {  
+        padding-top: 12px;  padding-bottom: 12px;  text-align: left;  
+        background-color: rgb(135 136 152);  
+        border-color: rgb(162, 161, 179) !important;  color: white;
+        }
+        .oddTableRow { background-color:rgb(229, 241, 241);}
+        .tableRow { background-color:rgb(130, 163, 163); } 
+        tr:hover { background-color: rgba(231, 241, 248, 0.76) !important;}
+        .selectedTableRow { background-color: rgba(141, 186, 238, 0.76) !important;}
+        td { width: 300px;}
+        td + td { width: 100px;}
+        td + td + td { width: 50px;}
+	h7 { font-size: 12px; color: gray; font-style : italic;}
+        .tab { font-size: 12px; color: steelblue; margin: 2px 0;}
+  </style>
+  
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+    google.charts.load('current', {'packages':['bar']});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+        var data2 = google.visualization.arrayToDataTable([
+          ['', 'OK', 'FAIL', 'UNREACHABLE'],
+		  ['WINDOWS', {{count_windows_ok}}, {{count_windows_fail}}, {{count_windows_unreachable}}],
+          ['LINUX', {{count_linux_ok}}, {{count_linux_fail}}, {{count_linux_unreachable}}]
+        ]);
+        var options2 = {
+          chart: {
+            title: 'System updates report',
+            subtitle: '{{ ansible_date_time.date }}',
+			position: 'top',
+          },
+          bars: 'horizontal' // Required for Material Bar Charts.
+        };
+	    var chart = new google.charts.Bar(document.getElementById('barchart_material'));
+        chart.draw(data2, google.charts.Bar.convertOptions(options2));
+    }
+
+	google.charts.load('current', {'packages':['table']});
+    google.charts.setOnLoadCallback(drawTable);
+	function drawTable() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Server');
+		data.addColumn('string', 'OS');
+        data.addColumn('string', 'Etat');
+        data.addRows([
+          {% for line in report_list.stdout_lines %}
+          [{{ line }}],
+          {%endfor%}		  
+        ]); 
+		var cssClassNames = {
+            'headerRow': 'italic-darkblue-font large-font bold-font',
+            'tableRow': '',
+            'hoverTableRow': '',
+            'oddTableRow': 'black-background',
+            'selectedTableRow': 'orange-background large-font',
+            'headerCell': 'gold-border',
+            'tableCell': '',
+            'rowNumberCell': 'underline-gray-font'
+		};
+        var table = new google.visualization.Table(document.getElementById('table'));
+		
+	var formatter = new google.visualization.ColorFormat();
+        formatter.addRange('UNREACHABLE', 'white', 'white', '#f4b400');
+        formatter.addRange('OK', 'white', 'white', '#4285f4');
+        formatter.addRange('FAIL', 'white', 'white', '#FF6666');
+        formatter.addRange('CRITICAL', 'white', 'white', '#FF6666');
+        formatter.format(data, 2); // Apply formatter to third column
+
+        table.draw(data, {showRowNumber: false, allowHtml: true, page: 'event', pageSize: 15, 'cssClassNames': cssClassNames});
+        }
+    </script>
+  </head>
+  
+  <body>
+	<br>
+    <div id="barchart_material" style="width: 900px; height: 300px;"></div>
+	<br>
+        <pre class="tab">Total:  WINDOWS: {{count_windows}}   -   LINUX: {{count_linux}}</pre>
+	<br>
+
+	<div id="table"></div>
+  </body>
+</html>
+

@@ -1,0 +1,9 @@
+---
+- name: Check WINRM
+  win_wait_for:
+    host: "{{ inventory_hostname }}"
+    port: 5985
+    state: started
+    delay: 0
+    timeout: 3
+  register: check_winrm_port

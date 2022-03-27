@@ -1,0 +1,23 @@
+---
+- name: Reboot
+  win_reboot:
+    reboot_timeout: 600
+
+- name: Wait for reboot
+  wait_for_connection:
+    connect_timeout: 10
+    sleep: 5
+    delay: 10
+    timeout: 900
+
+- name: Check WINRM
+  win_wait_for:
+    host: "{{ inventory_hostname }}"
+    port: 5985
+    state: started
+    delay: 0
+    timeout: 3
+  register: chk_connection
+  retries: 10
+  delay: 10
+  until: chk_connection is success

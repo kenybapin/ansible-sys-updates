@@ -1,0 +1,9 @@
+---
+- name: Check SSH
+  wait_for:
+    host: "{{ inventory_hostname }}"
+    port: 22
+    state: started
+    delay: 0
+    timeout: 3
+  register: check_ssh

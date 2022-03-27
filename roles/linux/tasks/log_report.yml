@@ -1,0 +1,27 @@
+---
+# PLAYED HOSTS STATUS
+
+- set_fact:
+    update_status: "FAIL"
+- set_fact:
+    update_status: "OK"
+  when:
+    - check_subscription is not failed
+    - chk_connection is not failed
+    - yum_update is not failed
+- set_fact:
+    update_status: "CRITICAL"
+  when:
+    - chk_connection is failed
+
+- name: add processed servers
+  shell: echo "'{{ inventory_hostname }}', 'LINUX', '{{ update_status }}'" >> {{ playbook_dir }}/report.csv
+  delegate_to: localhost
+
+
+# UNREACHABLE HOSTS
+
+- name: add unreachable servers
+  shell: echo "'{{ item }}', 'LINUX', 'UNREACHABLE'" >> {{ playbook_dir }}/report.csv
+  with_items: "{{ ansible_play_hosts_all|difference(ansible_play_hosts) | list }}"
+  delegate_to: localhost

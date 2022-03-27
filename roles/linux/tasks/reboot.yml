@@ -1,0 +1,18 @@
+---
+- name: Reboot
+  reboot:
+    reboot_timeout: 600
+
+- name: Wait for reboot
+  wait_for_connection:
+    connect_timeout: 10
+    sleep: 5
+    delay: 60
+    timeout: 900
+
+- name: Check connection
+  shell: whoami
+  register: chk_connection
+  retries: 10
+  delay: 60
+  until: chk_connection is success

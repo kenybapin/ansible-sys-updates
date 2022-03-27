@@ -1,0 +1,13 @@
+---
+- name: Install all security, critical, rollup and updates
+  win_updates:
+    category_names:
+      - SecurityUpdates
+      - CriticalUpdates
+      - UpdateRollups
+      - Updates
+    blacklist:
+      - KB2718695
+      - KB2841134
+  register: win_update
+  ignore_errors: true

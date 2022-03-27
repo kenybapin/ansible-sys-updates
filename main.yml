@@ -1,0 +1,28 @@
+---
+- hosts: all
+  gather_facts: true
+  serial: "{{ serial_value|default(20) }}"
+  order: inventory
+
+  pre_tasks:
+    - name: Clean report CSV file
+      file:  
+        path: "{{ playbook_dir }}/report.csv"
+        state: absent
+      delegate_to: localhost
+      run_once: true
+
+  tasks:
+    - block:
+        - name: Linux
+          include_role: name=linux
+          when: os_version == "Linux"
+    
+        - name: Windows
+          include_role: name=windows
+          when: os_version == "Windows"
+
+  post_tasks:
+    - name: Create HTML Report
+      include_role: name=report
+      run_once: true
