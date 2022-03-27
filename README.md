@@ -2,9 +2,9 @@
 
 ## Requirements
 - Ansible 2.9
-- Complete inventory with your own hosts (keep windows and linux groups).
-- Configure hosts access : SSH / WINRM with privileged accounts (see vars in groups_vars folder)
-- Manage secrets and protect all sensitive data with ansible vault (if necessary)
+- Set up inventory with your own hosts
+- Configure hosts access with SSH or WINRM (see groups_vars folder)
+- Manage secrets and protect all sensitive data with ansible vault (optional)
 
 &nbsp;
 
