@@ -22,3 +22,5 @@ ansible-playbook main.yml -i inventory
 &nbsp;
   
 ### Reporting
+
+  ![alt text](https://github.com/kenybapin/ansible-sys-updates/blob/main/misc/report.jpg?raw=true)
