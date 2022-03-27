@@ -1,4 +1,4 @@
-# Linux and Windows updates with Ansible
+# Run Linux and Windows updates with Ansible
 
 ## Requirements
 - Ansible 2.9
