@@ -2,9 +2,6 @@
 
 ## Requirements
 - Ansible 2.9
-- Set up inventory with your own hosts
-- Configure hosts access with SSH or WINRM (see groups_vars folder)
-- Manage secrets and protect all sensitive data with ansible vault (optional)
 
 &nbsp;
 
@@ -22,6 +19,10 @@ graph TD;
 &nbsp;
   
 ## Setup
+1. Complete inventory with your own hosts
+2. Configure hosts access with SSH or WINRM (see groups_vars folder)
+3. Manage secrets and protect all sensitive data with ansible vault (optional)
+4. Run :
 ```bash
 ansible-playbook main.yml -i inventory
 ```
