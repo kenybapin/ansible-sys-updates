@@ -1,27 +1,23 @@
 ---
-# PLAYED HOSTS STATUS
+# 1. Logic to define status if not already set by the main playbook's rescue block
+- name: Finalize Windows update status
+  set_fact:
+    update_status: "{{ patch_status | default('SUCCESS') }}"
 
-- set_fact:
-    update_status: "FAIL"
-- set_fact:
-    update_status: "OK"
-  when:
-    - chk_connection is not failed
-    - win_update is not failed
-- set_fact:
-    update_status: "CRITICAL"
-  when:
-    - chk_connection is failed
-
-- name: add processed servers
-  shell: echo "'{{ inventory_hostname }}', 'WINDOWS', '{{ update_status }}'" >> {{ playbook_dir }}/report.csv
+# 2. Securely append to CSV using lineinfile (prevents file corruption)
+- name: Log processed Windows servers
+  lineinfile:
+    path: "{{ playbook_dir }}/report.csv"
+    create: yes
+    line: "'{{ inventory_hostname }}', 'WINDOWS', '{{ update_status }}'"
+    insertafter: EOF
   delegate_to: localhost
 
-
-
-# UNREACHABLE HOSTS
-
-- name: add unreachable servers
-  shell: echo "'{{ item }}', 'WINDOWS', 'UNREACHABLE'" >> {{ playbook_dir }}/report.csv
-  with_items: "{{ ansible_play_hosts_all|difference(ansible_play_hosts) | list }}"
+# 3. Log unreachable hosts (Run once per batch to avoid duplicates)
+- name: Log unreachable Windows servers
+  lineinfile:
+    path: "{{ playbook_dir }}/report.csv"
+    line: "'{{ item }}', 'WINDOWS', 'UNREACHABLE'"
+  loop: "{{ ansible_play_hosts_all | difference(ansible_play_hosts) }}"
   delegate_to: localhost
+  run_once: true
