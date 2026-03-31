@@ -1,28 +1,73 @@
 ---
-- hosts: all
-  gather_facts: true
-  serial: "{{ serial_value|default(20) }}"
-  order: inventory
-
-  pre_tasks:
-    - name: Clean report CSV file
-      file:  
+- name: Phase 1 - Secure Initialization
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Clean previous report file
+      file:
         path: "{{ playbook_dir }}/report.csv"
         state: absent
-      delegate_to: localhost
-      run_once: true
+      ignore_errors: true
+
+- name: Phase 2 - Systems Patching Automation
+  hosts: all
+  gather_facts: true
+  order: inventory
+  serial: "{{ serial_value | default('20%') }}"
+  max_fail_percentage: 100
 
   tasks:
     - block:
-        - name: Linux
-          include_role: name=linux
-          when: os_version == "Linux"
-    
-        - name: Windows
-          include_role: name=windows
-          when: os_version == "Windows"
+        # --- STEP 1: PRE-REQUISITES CHECK ---
+        - name: Check Disk Space
+          assert:
+            that: (item.size_available > 2000000000)
+            fail_msg: "ERROR_INSUFFICIENT_SPACE"
+          loop: "{{ ansible_mounts }}"
+          when: item.mount == '/' or item.mount == 'C:'
 
-  post_tasks:
-    - name: Create HTML Report
-      include_role: name=report
-      run_once: true
+        # --- STEP 2: ROLE EXECUTION ---
+        - name: Execute Linux Patching
+          include_role:
+            name: linux
+          when: ansible_system == "Linux"
+
+        - name: Execute Windows Patching
+          include_role:
+            name: windows
+          when: ansible_os_family == "Windows"
+
+        # --- STEP 3: REBOOT & VALIDATION ---
+        - name: Validate Host Connectivity (Post-Reboot)
+          wait_for_connection:
+            delay: 15
+            timeout: 300
+          register: reboot_status
+
+      rescue:
+        # --- ERROR MANAGEMENT (Capture all stages) ---
+        - name: Diagnose failure reason
+          set_fact:
+            patch_status: >-
+              {% if ansible_failed_result.msg is defined and "ERROR_INSUFFICIENT_SPACE" in ansible_failed_result.msg %}
+                SPACE_ERROR
+              {% elif reboot_status is failed %}
+                HOST_DOWN_AFTER_REBOOT
+              {% else %}
+                UPDATE_PROCESS_FAILED
+              {% endif %}
+
+    - name: Set success status by default
+      set_fact:
+        patch_status: "SUCCESS"
+      when: patch_status is not defined
+
+- name: Phase 3 - Final Reporting
+  hosts: all
+  gather_facts: false
+  run_once: true
+  tasks:
+    - name: Generate HTML Report
+      include_role:
+        name: report
+      delegate_to: localhost
