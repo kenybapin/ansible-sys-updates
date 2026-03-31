@@ -1,105 +1,102 @@
-{% set count_windows = report_list.stdout_lines|select("match", ".*WINDOWS.*")|list|count -%}
-{% set count_windows_fail = report_list.stdout_lines|select("match", ".*WINDOWS.*(FAIL|CRITICAL).*")|list|count -%}
-{% set count_windows_ok = report_list.stdout_lines|select("match", ".*WINDOWS.*OK.*")|list|count -%}
-{% set count_windows_unreachable = report_list.stdout_lines|select("match", ".*WINDOWS.*UNREACHABLE.*")|list|count -%}
+{% set count_windows = report_list.stdout_lines | select("match", ".*WINDOWS.*") | list | count -%}
+{% set count_windows_fail = report_list.stdout_lines | select("match", ".*WINDOWS.*(FAIL|CRITICAL|ERROR|DOWN).*") | list | count -%}
+{% set count_windows_ok = report_list.stdout_lines | select("match", ".*WINDOWS.*SUCCESS.*") | list | count -%}
+{% set count_windows_unreachable = report_list.stdout_lines | select("match", ".*WINDOWS.*UNREACHABLE.*") | list | count -%}
 
-{% set count_linux = report_list.stdout_lines|select("match", ".*LINUX.*")|list|count -%}
-{% set count_linux_fail = report_list.stdout_lines|select("match", ".*WINDOWS.*(FAIL|CRITICAL).*")|list|count -%}
-{% set count_linux_ok = report_list.stdout_lines|select("match", ".*LINUX.*OK.*")|list|count -%}
-{% set count_linux_unreachable = report_list.stdout_lines|select("match", ".*LINUX.*UNREACHABLE.*")|list|count -%}
+{% set count_linux = report_list.stdout_lines | select("match", ".*LINUX.*") | list | count -%}
+{% set count_linux_fail = report_list.stdout_lines | select("match", ".*LINUX.*(FAIL|CRITICAL|ERROR|DOWN).*") | list | count -%}
+{% set count_linux_ok = report_list.stdout_lines | select("match", ".*LINUX.*SUCCESS.*") | list | count -%}
+{% set count_linux_unreachable = report_list.stdout_lines | select("match", ".*LINUX.*UNREACHABLE.*") | list | count -%}
 
 <html>
   <head>
-  
-  <style>
-        /* CSS */
+    <meta charset="utf-8">
+    <style>
         body {  
-        -webkit-font-smoothing: antialiased;  font-family: Roboto;  
-        font-size: 14px;  color: #757575;  padding-left: 20px;
+            -webkit-font-smoothing: antialiased;
+            font-family: 'Roboto', sans-serif; [cite: 2] 
+            font-size: 14px; color: #757575; padding: 20px;
         }
-        /* Table */
         th {  
-        padding-top: 12px;  padding-bottom: 12px;  text-align: left;  
-        background-color: rgb(135 136 152);  
-        border-color: rgb(162, 161, 179) !important;  color: white;
+            padding: 12px; text-align: left; [cite: 3]
+            background-color: #878898; color: white; [cite: 3]
+            border: 1px solid #A2A1B3; [cite: 3]
         }
-        .oddTableRow { background-color:rgb(229, 241, 241);}
-        .tableRow { background-color:rgb(130, 163, 163); } 
-        tr:hover { background-color: rgba(231, 241, 248, 0.76) !important;}
-        .selectedTableRow { background-color: rgba(141, 186, 238, 0.76) !important;}
-        td { width: 300px;}
-        td + td { width: 100px;}
-        td + td + td { width: 50px;}
-	h7 { font-size: 12px; color: gray; font-style : italic;}
-        .tab { font-size: 12px; color: steelblue; margin: 2px 0;}
-  </style>
+        tr:hover { background-color: rgba(231, 241, 248, 0.76) !important; } [cite: 5]
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        .tab { font-size: 12px; color: steelblue; margin: 10px 0; font-weight: bold; } [cite: 7]
+        #table_div { margin-top: 20px; }
+    </style>
   
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-    google.charts.load('current', {'packages':['bar']});
-    google.charts.setOnLoadCallback(drawChart);
-    function drawChart() {
-        var data2 = google.visualization.arrayToDataTable([
-          ['', 'OK', 'FAIL', 'UNREACHABLE'],
-		  ['WINDOWS', {{count_windows_ok}}, {{count_windows_fail}}, {{count_windows_unreachable}}],
-          ['LINUX', {{count_linux_ok}}, {{count_linux_fail}}, {{count_linux_unreachable}}]
-        ]);
-        var options2 = {
-          chart: {
-            title: 'System updates report',
-            subtitle: '{{ ansible_date_time.date }}',
-			position: 'top',
-          },
-          bars: 'horizontal' // Required for Material Bar Charts.
-        };
-	    var chart = new google.charts.Bar(document.getElementById('barchart_material'));
-        chart.draw(data2, google.charts.Bar.convertOptions(options2));
+    google.charts.load('current', {'packages':['bar', 'table']}); [cite: 8, 10]
+    google.charts.setOnLoadCallback(drawAll);
+
+    function drawAll() {
+        drawChart();
+        drawTable();
     }
 
-	google.charts.load('current', {'packages':['table']});
-    google.charts.setOnLoadCallback(drawTable);
-	function drawTable() {
+    function drawChart() {
+        var data2 = google.visualization.arrayToDataTable([
+          ['OS', 'OK', 'FAIL/ERROR', 'UNREACHABLE'],
+          ['WINDOWS', {{count_windows_ok}}, {{count_windows_fail}}, {{count_windows_unreachable}}],
+          ['LINUX', {{count_linux_ok}}, {{count_linux_fail}}, {{count_linux_unreachable}}]
+        ]);
+
+        var options2 = {
+          chart: {
+            title: 'System Updates Report', [cite: 9]
+            subtitle: 'Execution Date: {{ ansible_date_time.date }}', [cite: 9]
+          },
+          bars: 'horizontal', [cite: 9]
+          colors: ['#4285f4', '#db4437', '#f4b400']
+        };
+
+        var chart = new google.charts.Bar(document.getElementById('barchart_material'));
+        chart.draw(data2, google.charts.Bar.convertOptions(options2)); [cite: 10]
+    }
+
+    function drawTable() {
         var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Server');
-		data.addColumn('string', 'OS');
-        data.addColumn('string', 'Etat');
+        data.addColumn('string', 'Server'); [cite: 11]
+        data.addColumn('string', 'OS'); [cite: 11]
+        data.addColumn('string', 'Status'); [cite: 12]
+        
         data.addRows([
           {% for line in report_list.stdout_lines %}
-          [{{ line }}],
-          {%endfor%}		  
-        ]); 
-		var cssClassNames = {
-            'headerRow': 'italic-darkblue-font large-font bold-font',
-            'tableRow': '',
-            'hoverTableRow': '',
-            'oddTableRow': 'black-background',
-            'selectedTableRow': 'orange-background large-font',
-            'headerCell': 'gold-border',
-            'tableCell': '',
-            'rowNumberCell': 'underline-gray-font'
-		};
-        var table = new google.visualization.Table(document.getElementById('table'));
-		
-	var formatter = new google.visualization.ColorFormat();
-        formatter.addRange('UNREACHABLE', 'white', 'white', '#f4b400');
-        formatter.addRange('OK', 'white', 'white', '#4285f4');
-        formatter.addRange('FAIL', 'white', 'white', '#FF6666');
-        formatter.addRange('CRITICAL', 'white', 'white', '#FF6666');
-        formatter.format(data, 2); // Apply formatter to third column
+          [{{ line }}], [cite: 12]
+          {% endfor %}
+        ]);
 
-        table.draw(data, {showRowNumber: false, allowHtml: true, page: 'event', pageSize: 15, 'cssClassNames': cssClassNames});
-        }
+        var table = new google.visualization.Table(document.getElementById('table_div'));
+        
+        var formatter = new google.visualization.ColorFormat();
+        // Couleurs basées sur les statuts du nouveau Playbook [cite: 15, 16]
+        formatter.addRange('SUCCESS', 'white', 'white', '#4CAF50');
+        formatter.addRange('OK', 'white', 'white', '#4CAF50');
+        formatter.addRange('UNREACHABLE', 'white', 'white', '#f4b400');
+        formatter.addRange('FAIL', 'white', 'white', '#db4437');
+        formatter.addRange('UPDATE_PROCESS_FAILED', 'white', 'white', '#db4437');
+        formatter.addRange('SPACE_ERROR', 'white', 'white', '#ff9800');
+        formatter.addRange('HOST_DOWN_AFTER_REBOOT', 'white', 'white', '#000000');
+        
+        formatter.format(data, 2); [cite: 16]
+
+        table.draw(data, {allowHtml: true, showRowNumber: false, width: '100%', pageSize: 20}); [cite: 16]
+    }
     </script>
   </head>
   
   <body>
-	<br>
+    <h2>Infrastructure Patching Dashboard</h2>
     <div id="barchart_material" style="width: 900px; height: 300px;"></div>
-	<br>
-        <pre class="tab">Total:  WINDOWS: {{count_windows}}   -   LINUX: {{count_linux}}</pre>
-	<br>
+    
+    <div class="tab">
+        Total Inventory: WINDOWS ({{count_windows}}) | LINUX ({{count_linux}}) [cite: 7]
+    </div>
 
-	<div id="table"></div>
+    <div id="table_div"></div>
   </body>
 </html>
-
