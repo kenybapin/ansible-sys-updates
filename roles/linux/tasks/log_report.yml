@@ -1,27 +1,23 @@
 ---
-# PLAYED HOSTS STATUS
+- name: Ensure report file exists with header
+  copy:
+    content: "Hostname,OS,Status\n"
+    dest: "{{ playbook_dir }}/report.csv"
+    force: false
+  delegate_to: localhost
+  run_once: true
 
-- set_fact:
-    update_status: "FAIL"
-- set_fact:
-    update_status: "OK"
-  when:
-    - check_subscription is not failed
-    - chk_connection is not failed
-    - yum_update is not failed
-- set_fact:
-    update_status: "CRITICAL"
-  when:
-    - chk_connection is failed
-
-- name: add processed servers
-  shell: echo "'{{ inventory_hostname }}', 'LINUX', '{{ update_status }}'" >> {{ playbook_dir }}/report.csv
+- name: Append server status to CSV
+  lineinfile:
+    path: "{{ playbook_dir }}/report.csv"
+    line: "'{{ inventory_hostname }}', 'LINUX', '{{ patch_status | default('SUCCESS') }}'"
+    insertafter: EOF
   delegate_to: localhost
 
-
-# UNREACHABLE HOSTS
-
-- name: add unreachable servers
-  shell: echo "'{{ item }}', 'LINUX', 'UNREACHABLE'" >> {{ playbook_dir }}/report.csv
-  with_items: "{{ ansible_play_hosts_all|difference(ansible_play_hosts) | list }}"
+- name: Log unreachable servers
+  lineinfile:
+    path: "{{ playbook_dir }}/report.csv"
+    line: "'{{ item }}', 'LINUX', 'UNREACHABLE'"
+  loop: "{{ ansible_play_hosts_all | difference(ansible_play_hosts) }}"
   delegate_to: localhost
+  run_once: true
